@@ -20,15 +20,19 @@
   <cffunction name="_forceHttps" access="public" output="false" returntype="void">
     <cfargument name="forwardedPort" type="string" required="false" default="#cgi[variables.$class.forcehttps.cgiParameterName]#" />
     <cfscript>
-      var loc = { args = {} };
+      var loc = { args = { params = "" } };
 
       if (len(arguments.forwardedPort) and arguments.forwardedPort != "443")
       {
         // get our key params
         for (loc.item in params)
+        {
           if (loc.item contains "key" or loc.item eq "action")
             loc.args[loc.item] = params[loc.item];
 
+          if (not listFindNoCase("route,action,controller", params[loc.item]) and not findNoCase("key", loc.item) and isSimpleValue(params[loc.item]))
+            loc.args.params = listAppend(loc.args.params, "#loc.item#=#params[loc.item]#", "&");
+        }
         redirectTo(route=params.route, protocol="https", onlyPath=false, statusCode=301, argumentCollection=loc.args);
       }
     </cfscript>
